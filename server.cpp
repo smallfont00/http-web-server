@@ -216,9 +216,14 @@ public:
 
     int Listen(uint16_t port, std::function<void()> action)
     {
-        action();
 
-        create_server_socket(port);
+        if (create_server_socket(port) == -1)
+        {
+            cout << "Quit" << endl;
+            return -1;
+        }
+
+        action();
 
         char buf[4096];
 
@@ -308,13 +313,12 @@ public:
                     body = cgi_handler(target_path, msg["Query"], msg["Body"]);
                 }
                 // Echo message back to client
-                std::string content_length = "Content-Length";
-                content_length += (body.size());
+                std::string content_length = "Content-Length: " + std::to_string(body.size());
 
                 std::string str = "";
                 str += "HTTP/1.1 200 OK\n";
-                str += "Content-Type:" + content_type + "\n";
-                str += "Connection: close\n";
+                str += "Content-Type: " + content_type + "\n";
+                str += "Connection: keep-alive\n";
                 str += content_length + "\n";
 
                 str += "\n";
@@ -364,22 +368,55 @@ private:
 
     int create_server_socket(uint16_t port)
     {
-        this->server_socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (this->server_socket == -1)
+        struct addrinfo hints, *ai, *p;
+
+        int sockfd;
+
+        memset(&hints, 0, sizeof(hints));
+
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_PASSIVE;
+
+        int rv;
+        if ((rv = getaddrinfo(NULL, "54001", &hints, &ai)) != 0)
+        {
+            cerr << "selectserver: " << gai_strerror(rv) << endl;
+            return -1;
+        }
+
+        int yes = 1;
+        for (p = ai; p != NULL; p = p->ai_next)
+        {
+            this->server_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+            if (this->server_socket < 0)
+            {
+                continue;
+            }
+
+            setsockopt(this->server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+
+            if (bind(this->server_socket, p->ai_addr, p->ai_addrlen) < 0)
+            {
+                close(this->server_socket);
+                continue;
+            }
+            break;
+        }
+
+        if (p == NULL)
         {
             cerr << "Can't create a socket! Quitting" << endl;
             return -1;
         }
 
-        sockaddr_in hint;
-        hint.sin_family = AF_INET;
-        hint.sin_port = htons(port);
-        inet_pton(AF_INET, "0.0.0.0", &hint.sin_addr);
+        freeaddrinfo(ai);
 
-        bind(this->server_socket, (sockaddr *)&hint, sizeof(hint));
-
-        // Tell Winsock the socket is for listening
-        listen(this->server_socket, SOMAXCONN);
+        if (listen(this->server_socket, SOMAXCONN))
+        {
+            cerr << "Can't listen" << endl;
+            return -1;
+        }
         return this->server_socket;
     }
 };
