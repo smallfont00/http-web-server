@@ -26,7 +26,7 @@ int main(void) {
 
     char title[128], text[128], path[128];
     sscanf(buf, "title=%s", title);
-    sprintf(path, "%s/%s", "static/database", title);
+    sprintf(path, "%s/%s", "database", title);
     FILE *fp = fopen(path, "r");
     if (fp != 0) {
         fseek(fp, 0, SEEK_END);
@@ -41,6 +41,6 @@ int main(void) {
 
     // output to stdout
     printf("<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n");
-    printf("<TITLE>View</TITLE>\n");
+    printf("<TITLE>View message</TITLE>\n");
     printf("<BODY><h>%s :</h><p>%s</p></BODY></HTML>\n", title, text);
 }

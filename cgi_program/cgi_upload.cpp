@@ -31,13 +31,13 @@ int main(void) {
         if ((*p) == '+') (*p) = ' ';
     }
         
-    sprintf(path, "%s/%s", "static/database", title);
+    sprintf(path, "%s/%s", "database", title);
     FILE *fp = fopen(path, "w");
     fprintf(fp, "%s", text);
 
     fclose(fp);
     // output to stdout
     printf("<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n");
-    printf("<TITLE>I'm a example</TITLE>\n");
+    printf("<TITLE>Message upload</TITLE>\n");
     printf("<BODY>title: %s has been uploaded</BODY></HTML>\n", title);
 }
