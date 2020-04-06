@@ -38,13 +38,13 @@ class Static {
 
         if (target_error.value()) {
             std::cerr << target_error.message() << " : " << req.path() << std::endl;
-            res.status(404);
+            res.status(404).body("");
             return;
         }
 
         if (target_path.string().find_first_of(static_path.string()) != 0) {
             std::cerr << "outside the static path" << std::endl;
-            res.status(404);
+            res.status(404).body("");
             return;
         }
 

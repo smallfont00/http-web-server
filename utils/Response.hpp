@@ -31,8 +31,8 @@ class Response {
         return *this;
     }
     Response &body(std::string body) {
-        msg["Body"] = std::move(body);
         msg["Content-Length"] = "Content-Length: " + std::to_string(body.size()) + "\n";
+        msg["Body"] = std::move(body);
         return *this;
     }
     Response &connection(bool open) {
@@ -52,8 +52,11 @@ class Response {
         str += msg["Code"];
         str += msg["Content-Type"];
         str += msg["Connection"];
-        str += msg["Content_Length"];
-        str += "\n";
+        str += msg["Content-Length"];
+
+        if (str.back() == '\n') str.back() = '\r';
+        str += "\n\r\n";
+
         str += msg["Body"];
 
         return send(clientSocket, str.c_str(), str.size(), 0);
