@@ -43,8 +43,6 @@ class Server {
 
         action();
 
-        char buf[4096];
-
         while (true) {
             int clientSocket = create_client_socket();
 
